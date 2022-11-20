@@ -1,3 +1,5 @@
-data/*
-res/*
-draft/*
+/data/*
+/res/*
+/draft/*
+!/res/pickle
+**/.ipynb_checkpoints
