@@ -64,9 +64,13 @@ CLASSIFIERS = {
     "MLP_60_30" : MLPClassifier(hidden_layer_sizes=(60,30), random_state=1),
     "MLP_100_50" : MLPClassifier(hidden_layer_sizes=(100,50), random_state=1),
 
-    "CART_gini" : DecisionTreeClassifier(criterion="gini", random_state=1),
-    "CART_entropy" : DecisionTreeClassifier(criterion="entropy", random_state=1),
-    "CART_log_loss" : DecisionTreeClassifier(criterion="log_loss", random_state=1),
+    "CART_gini_5" : DecisionTreeClassifier(criterion="gini", max_depth=5, random_state=1),
+    "CART_gini_10" : DecisionTreeClassifier(criterion="gini", max_depth=10, random_state=1),
+    "CART_gini_15" : DecisionTreeClassifier(criterion="gini", max_depth=15, random_state=1),
+
+    "CART_entropy_5" : DecisionTreeClassifier(criterion="entropy", max_depth=5, random_state=1),
+    "CART_entropy_10" : DecisionTreeClassifier(criterion="entropy", max_depth=10, random_state=1),
+    "CART_entropy_15" : DecisionTreeClassifier(criterion="entropy", max_depth=15, random_state=1),
 
     "KNN_10" : KNeighborsClassifier(n_neighbors=10),
     "KNN_20" : KNeighborsClassifier(n_neighbors=20),
@@ -82,12 +86,48 @@ CLASSIFIERS = {
     "Bag_120" : BaggingClassifier(n_estimators=120, random_state=1),
     "Bag_160" : BaggingClassifier(n_estimators=160, random_state=1),
 
+    "AdaB_20" : AdaBoostClassifier(n_estimators=10, random_state=1),
     "AdaB_20" : AdaBoostClassifier(n_estimators=20, random_state=1),
     "AdaB_40" : AdaBoostClassifier(n_estimators=40, random_state=1),
     "AdaB_80" : AdaBoostClassifier(n_estimators=80, random_state=1),
     "AdaB_120" : AdaBoostClassifier(n_estimators=120, random_state=1),
     "AdaB_160" : AdaBoostClassifier(n_estimators=160, random_state=1)
+}
 
+CLASSIFIERS_LIGHT = { 
+    'RF_10': RandomForestClassifier(n_estimators=10, random_state=1),
+    'RF_20': RandomForestClassifier(n_estimators=20, random_state=1),
+    'RF_40': RandomForestClassifier(n_estimators=40, random_state=1),
+    'RF_80': RandomForestClassifier(n_estimators=80, random_state=1),
+
+    "NB": GaussianNB(),
+    "QDA": QuadraticDiscriminantAnalysis(),
+
+    "MLP_20_10" : MLPClassifier(hidden_layer_sizes=(20,10), random_state=1),
+    "MLP_40_20" : MLPClassifier(hidden_layer_sizes=(40,20), random_state=1),
+
+    "CART_gini_5" : DecisionTreeClassifier(criterion="gini", max_depth=5, random_state=1),
+    "CART_gini_10" : DecisionTreeClassifier(criterion="gini", max_depth=10, random_state=1),
+    "CART_gini_15" : DecisionTreeClassifier(criterion="gini", max_depth=15, random_state=1),
+
+    "CART_entropy_5" : DecisionTreeClassifier(criterion="entropy", max_depth=5, random_state=1),
+    "CART_entropy_10" : DecisionTreeClassifier(criterion="entropy", max_depth=10, random_state=1),
+    "CART_entropy_15" : DecisionTreeClassifier(criterion="entropy", max_depth=15, random_state=1),
+
+    "KNN_10" : KNeighborsClassifier(n_neighbors=10),
+    "KNN_20" : KNeighborsClassifier(n_neighbors=20),
+    "KNN_40" : KNeighborsClassifier(n_neighbors=40),
+    "KNN_80" :  KNeighborsClassifier(n_neighbors=80),
+
+    "Bag_10" : BaggingClassifier(n_estimators=10, random_state=1),
+    "Bag_20" : BaggingClassifier(n_estimators=20, random_state=1),
+    "Bag_40" : BaggingClassifier(n_estimators=40, random_state=1),
+    "Bag_80" : BaggingClassifier(n_estimators=80, random_state=1),
+
+    "AdaB_20" : AdaBoostClassifier(n_estimators=10, random_state=1),
+    "AdaB_20" : AdaBoostClassifier(n_estimators=20, random_state=1),
+    "AdaB_40" : AdaBoostClassifier(n_estimators=40, random_state=1),
+    "AdaB_80" : AdaBoostClassifier(n_estimators=80, random_state=1)
 }
 
 
@@ -180,7 +220,7 @@ def run_classifiers(sk_func_dict, X, Y, scores=['accuracy', 'precision', 'roc_au
     kf = KFold(n_splits=nb_split, shuffle=True, random_state=0)
     size_clfs = len(sk_func_dict)
     for idx, method in enumerate(sk_func_dict):
-        print(f"({idx+1}/{size_clfs}): {method} is running! ", end="", file=stderr)
+        print(f"({idx+1}/{size_clfs}): {method} is running!", end="", file=stderr)
         
         cv_metrics = cross_validate(sk_func_dict[method], X, Y, cv=kf, scoring=scores)
         
@@ -188,7 +228,7 @@ def run_classifiers(sk_func_dict, X, Y, scores=['accuracy', 'precision', 'roc_au
         dict_metrics["method"] = method
         df_metrics = pd.json_normalize(dict_metrics, sep="_")
         df = pd.concat([df, df_metrics], ignore_index=True)
-        print("\tDONE", file=stderr)
+        print("...   DONE", file=stderr)
     return df
 
 
