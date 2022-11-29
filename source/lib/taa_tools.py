@@ -98,7 +98,6 @@ CLASSIFIERS_LIGHT = {
     'RF_10': RandomForestClassifier(n_estimators=10, random_state=1),
     'RF_20': RandomForestClassifier(n_estimators=20, random_state=1),
     'RF_40': RandomForestClassifier(n_estimators=40, random_state=1),
-    'RF_80': RandomForestClassifier(n_estimators=80, random_state=1),
 
     "NB": GaussianNB(),
     "QDA": QuadraticDiscriminantAnalysis(),
@@ -122,12 +121,10 @@ CLASSIFIERS_LIGHT = {
     "Bag_10" : BaggingClassifier(n_estimators=10, random_state=1),
     "Bag_20" : BaggingClassifier(n_estimators=20, random_state=1),
     "Bag_40" : BaggingClassifier(n_estimators=40, random_state=1),
-    "Bag_80" : BaggingClassifier(n_estimators=80, random_state=1),
 
     "AdaB_20" : AdaBoostClassifier(n_estimators=10, random_state=1),
     "AdaB_20" : AdaBoostClassifier(n_estimators=20, random_state=1),
-    "AdaB_40" : AdaBoostClassifier(n_estimators=40, random_state=1),
-    "AdaB_80" : AdaBoostClassifier(n_estimators=80, random_state=1)
+    "AdaB_40" : AdaBoostClassifier(n_estimators=40, random_state=1)
 }
 
 
@@ -391,9 +388,11 @@ def comparative_preprocessing(df, scores=["precision", "accuracy", "recall"], DP
     )
 
 
-def results_run_clfs(run_df, run_name, top=10, height=5, DPI=226):
+def results_run_clfs(
+    run_df, run_name, top=10, height=5, DPI=226, 
     scores=["test_accuracy", "test_roc_auc", "test_precision"]
-    
+):
+
     COLOR_CLFS = {
         "RF"    : colormaps["tab10"].colors[0],
         "Bag"   : colormaps["tab10"].colors[1], 
