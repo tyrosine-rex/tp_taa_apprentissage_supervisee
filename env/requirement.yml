@@ -1,0 +1,11 @@
+name: taa_tp_env
+channels:
+  - conda-forge
+dependencies:
+  - ipykernel=6.17.1
+  - jupyterlab=3.5.0
+  - matplotlib=3.6.2
+  - numpy=1.23.5
+  - pandas=1.5.2
+  - python=3.10.8
+  - scikit-learn=1.1.3
