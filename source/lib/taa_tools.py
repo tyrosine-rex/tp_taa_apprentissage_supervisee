@@ -194,7 +194,7 @@ def make_pipeline(X_train, Y_train, sk_function, TRIM_COLS, params):
 
 
 def test_pipeline(pipelines, X_test, Y_test):
-    COLS_EVAL_2 = ["method", "accuracy", "precision", "params"]
+    COLS_EVAL_2 = ["method", "accuracy", "precision", "recall", "params"]
     df = pd.DataFrame(columns=COLS_EVAL_2)
     for pipe in pipelines:
         Y_pred = pipe.predict(X_test)
@@ -202,6 +202,7 @@ def test_pipeline(pipelines, X_test, Y_test):
             "method" : pipe.named_steps['model'].__class__.__name__,
             "accuracy" : pipe.score(X_test, Y_test),
             "precision" : precision_score(Y_test, Y_pred),
+            "recall" : recall_score(Y_test, Y_pred),
             "params" : [pipe.named_steps['model']]
         }
         df_line = pd.DataFrame(dict_line, columns=COLS_EVAL_2)
