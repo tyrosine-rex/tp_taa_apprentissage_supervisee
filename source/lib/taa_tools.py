@@ -30,13 +30,13 @@ import numpy as np
 
 def cache_pickle(func):
     def wrapper(*args, **kwargs):
-        cache_dir = f"./__cache_pickle__/{func.__name__}"
+        cache_dir = f"../res/__cache_pickle__/{func.__name__}"
 
         if not exists(cache_dir):
             makedirs(cache_dir)
 
-        tohash = f"{args}{kwargs}"
-        basename = sha1(tohash.encode('utf-8')).hexdigest()
+        fun_arg_key = f"{args}{kwargs}"
+        basename = sha1(fun_arg_key.encode('utf-8')).hexdigest()
         pkl_path = f"{cache_dir}/{basename}.pkl"
 
         if exists(pkl_path):
