@@ -118,7 +118,10 @@ def test_model(X_train, Y_train, X_test, Y_test, sk_fun, comment="", **kwargs):
     line_df = pd.DataFrame({k:v for k, v in zip(COLS_EVAL, line)}, columns=COLS_EVAL)
 
     # display confusion matrix
-    print(f"Confusion matrix with {sk_fun.__name__} {comment} {str(kwargs)}")
+    print(f"Results for {sk_fun.__name__} {comment} {str(kwargs)}")
+    print(f"{'accuracy':>16}{'precision':>16}{'recall':>16}")
+    print(f"{acc:>16.3f}{pr:>16.3f}{rec:>16.3f}")
+    print("Confusion matrix:")
     display(pd.DataFrame(Conf, index=["is 0", "is 1"], columns=["predicted 0", "predicted 1"]))
     
     return line_df
