@@ -104,7 +104,7 @@ CLASSIFIERS = {
 def calc_prior_accuracy(Y_df):
     probs = np.array([v/Y_df.shape[0] for _, v in Y_df.value_counts().items()])
     acc = (probs**2).sum()
-    txt = "Un algoritme qui renvoie la modalité $m$ avec une probabilité p(m):" + \
+    txt = "Un algoritme qui renvoie la modalité $m$ avec une probabilité p(m) tel que:" + \
     f" $$p(m)= \\frac{{nb_{{m}}}}{{nb_{{total}}}} $$ " + \
     "aura une accuracy (c-a-d proba que $Y_{true}$ et $Y_{pred}$ soit d'accord) de :" + \
     f" $$acc = \sum_{{m}}^{{modalite}} (p(m))^{2} = {acc:.3f}$$ " + \
