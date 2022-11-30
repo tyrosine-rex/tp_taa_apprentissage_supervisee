@@ -1,5 +1,6 @@
 /data/*
 /res/*
+!/res/__cache_pickle__/
 /draft/*
 **/.ipynb_checkpoints
 **/.DS_Store
