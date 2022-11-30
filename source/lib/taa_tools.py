@@ -350,15 +350,15 @@ def results_run_clfs(
         vmax, vlast, vmin = run_df[mean].max(), run_df[mean][idx].min(), run_df[mean].min()
         
         ax[i].set_xlim([xmin, xmax])
-        ax[i].tick_params(axis='both', labelsize='xx-small')
-        ax[i].set_title(f"'{sc}' max:{vmax:.3f} last:{vlast:.3f} min:{vmin:.3f}", fontsize='x-small')
+        ax[i].tick_params(axis='both', labelsize='x-small')
+        ax[i].set_title(f"'{sc}' max:{vmax:.3f} last:{vlast:.3f} min:{vmin:.3f}", fontsize='small')
       
         for r in idx[::-1]: # n methods loop
             serie = run_df.iloc[r]
             c = COLOR_CLFS[serie["method"].split("_")[0]]
             ax[i].barh(serie["method"], serie[mean], xerr=serie[sd], color=c)
 
-    fig.suptitle(f"Top '{top}' methods for {run_name}", fontsize=16)
+    fig.suptitle(f"Top '{top}' methods for {run_name}", fontsize=18)
     fig.tight_layout()
     fig.legend(
         [Patch(facecolor=COLOR_CLFS[key]) for key in COLOR_CLFS],[key for key in COLOR_CLFS],
