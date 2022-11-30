@@ -235,7 +235,7 @@ def explore_data(df, name, DPI=226):
         "columnspacing" :        -0.5,
         "handlelength" :        1.0,
         "handletextpad" :       0.5,
-        "framealpha" : 1, 
+        "framealpha" :          1, 
         "edgecolor" : "black"
     }
 
@@ -362,7 +362,6 @@ def results_run_clfs(
     fig.tight_layout()
     fig.legend(
         [Patch(facecolor=COLOR_CLFS[key]) for key in COLOR_CLFS],[key for key in COLOR_CLFS],
-        fontsize='small', 
         frameon=False, 
         bbox_to_anchor=(1.1, 0.75)
     )
