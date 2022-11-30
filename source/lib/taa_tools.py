@@ -133,11 +133,11 @@ def test_pipeline(pipelines, X_test, Y_test, score_params={}):
     for pipe in pipelines:
         Y_pred = pipe.predict(X_test)
         dict_line = {
-            "method" : pipe.named_steps['model'].__class__.__name__,
+            "method" : pipe.named_steps['estimator'].__class__.__name__,
             "accuracy" : pipe.score(X_test, Y_test),
             "precision" : precision_score(Y_test, Y_pred, **score_params),
             "recall" : recall_score(Y_test, Y_pred, **score_params),
-            "params" : [pipe.named_steps['model']]
+            "params" : [pipe.named_steps['estimator']]
         }
         df_line = pd.DataFrame(dict_line, columns=COLS_EVAL_2)
         df = pd.concat([df, df_line], ignore_index=True)
