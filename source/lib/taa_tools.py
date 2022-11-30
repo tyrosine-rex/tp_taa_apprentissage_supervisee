@@ -1,13 +1,36 @@
-##WORKFLOW STUFF
 from hashlib import sha1
 from pickle import dump, load 
 from sys import stderr
 from os.path import exists
 from os import makedirs
+from IPython.display import display
+
+from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, recall_score
+from sklearn.model_selection import cross_validate, KFold
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neural_network import MLPClassifier
+from sklearn.ensemble import AdaBoostClassifier, BaggingClassifier, RandomForestClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+
+from matplotlib.markers import MarkerStyle
+from matplotlib.lines import Line2D
+from matplotlib import colormaps
+from matplotlib.patches import Patch
+import matplotlib.pyplot as plt
+
+import pandas as pd
+import numpy as np
+
+
+##
+## WORKFLOW STUFF
+##
 
 def cache_pickle(func):
     def wrapper(*args, **kwargs):
-        cache_dir = f"./.cache_pickle/{func.__name__}"
+        cache_dir = f"./__cache_pickle__/{func.__name__}"
         
         if not exists(cache_dir):
             makedirs(cache_dir)
@@ -27,26 +50,9 @@ def cache_pickle(func):
     return wrapper
 
 
-## SK-LEARN STUFF
-import pandas as pd
-import numpy as np
-from IPython.display import Markdown, display
-
-from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, recall_score
-from sklearn.model_selection import GridSearchCV, cross_validate, KFold
-from sklearn.pipeline import Pipeline, FeatureUnion
-from sklearn.compose import ColumnTransformer
-
-from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA
-
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.neural_network import MLPClassifier
-from sklearn.ensemble import AdaBoostClassifier, BaggingClassifier, RandomForestClassifier
-from sklearn.naive_bayes import GaussianNB
-from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
-
+##
+## SKLEARN STUFF
+##
 
 CLASSIFIERS = { 
     'RF_10': RandomForestClassifier(n_estimators=10, random_state=1),
@@ -94,39 +100,6 @@ CLASSIFIERS = {
     "AdaB_160" : AdaBoostClassifier(n_estimators=160, random_state=1)
 }
 
-CLASSIFIERS_LIGHT = { 
-    'RF_10': RandomForestClassifier(n_estimators=10, random_state=1),
-    'RF_20': RandomForestClassifier(n_estimators=20, random_state=1),
-    'RF_40': RandomForestClassifier(n_estimators=40, random_state=1),
-
-    "NB": GaussianNB(),
-    "QDA": QuadraticDiscriminantAnalysis(),
-
-    "MLP_20_10" : MLPClassifier(hidden_layer_sizes=(20,10), random_state=1),
-    "MLP_40_20" : MLPClassifier(hidden_layer_sizes=(40,20), random_state=1),
-
-    "CART_gini_5" : DecisionTreeClassifier(criterion="gini", max_depth=5, random_state=1),
-    "CART_gini_10" : DecisionTreeClassifier(criterion="gini", max_depth=10, random_state=1),
-    "CART_gini_15" : DecisionTreeClassifier(criterion="gini", max_depth=15, random_state=1),
-
-    "CART_entropy_5" : DecisionTreeClassifier(criterion="entropy", max_depth=5, random_state=1),
-    "CART_entropy_10" : DecisionTreeClassifier(criterion="entropy", max_depth=10, random_state=1),
-    "CART_entropy_15" : DecisionTreeClassifier(criterion="entropy", max_depth=15, random_state=1),
-
-    "KNN_10" : KNeighborsClassifier(n_neighbors=10),
-    "KNN_20" : KNeighborsClassifier(n_neighbors=20),
-    "KNN_40" : KNeighborsClassifier(n_neighbors=40),
-    "KNN_80" :  KNeighborsClassifier(n_neighbors=80),
-
-    "Bag_10" : BaggingClassifier(n_estimators=10, random_state=1),
-    "Bag_20" : BaggingClassifier(n_estimators=20, random_state=1),
-    "Bag_40" : BaggingClassifier(n_estimators=40, random_state=1),
-
-    "AdaB_20" : AdaBoostClassifier(n_estimators=10, random_state=1),
-    "AdaB_20" : AdaBoostClassifier(n_estimators=20, random_state=1),
-    "AdaB_40" : AdaBoostClassifier(n_estimators=40, random_state=1)
-}
-
 
 def test_model(X_train, Y_train, X_test, Y_test, sk_fun, comment="", **kwargs):
 
@@ -145,52 +118,13 @@ def test_model(X_train, Y_train, X_test, Y_test, sk_fun, comment="", **kwargs):
     line_df = pd.DataFrame({k:v for k, v in zip(COLS_EVAL, line)}, columns=COLS_EVAL)
 
     # display confusion matrix
-    display(Markdown(f"Confusion matrix with {sk_fun.__name__} {comment} {str(kwargs)}"))
+    print(f"Confusion matrix with {sk_fun.__name__} {comment} {str(kwargs)}")
     display(pd.DataFrame(Conf, index=["is 0", "is 1"], columns=["predicted 0", "predicted 1"]))
     
     return line_df
 
 
-@cache_pickle
-def find_best_param(sk_function, params, X_train, Y_train):
-    gs = GridSearchCV(sk_function(), params, scoring="precision") #we target the best precision score)
-    gs.fit(X_train, Y_train)
-    display(Markdown(f"Best params for '{sk_function.__name__}' is :\n{gs.best_params_}\nscore (precision): {gs.best_score_}\n"))
-    return gs
-
-
-@cache_pickle
-def make_pipeline(X_train, Y_train, sk_function, TRIM_COLS, params):
-    # describe the pipeline
-    trim = ColumnTransformer([("trim", "passthrough", TRIM_COLS)]) # trim data with 7 best variables
-    # StdScaling data
-    trim_ss = Pipeline([
-        ("trim", trim), 
-        ('stdScale', StandardScaler())
-    ])
-    # StdScaling data then get 3 first PCA axis 
-    trim_ss_pca3 = Pipeline([
-        ("trim", trim), 
-        ('stdScale', StandardScaler()), 
-        ('pca3comp', PCA(n_components=3))
-    ])
-    # bind 3 frist PCA axis to the scaled data
-    prep_data = FeatureUnion([
-        ('trim + stdScale', trim_ss),
-        ('trim + stdScale + pca3comp', trim_ss_pca3)
-    ]) 
-    # then add estimator
-    pipeline = Pipeline([
-        ('preprocess', prep_data), 
-        ('model', sk_function(**params))
-    ]) 
-    # train the pipeline
-    pipeline.fit(X_train, Y_train)
-
-    return pipeline
-
-
-def test_pipeline(pipelines, X_test, Y_test):
+def test_pipeline(pipelines, X_test, Y_test, score_params={}):
     COLS_EVAL_2 = ["method", "accuracy", "precision", "recall", "params"]
     df = pd.DataFrame(columns=COLS_EVAL_2)
     for pipe in pipelines:
@@ -198,8 +132,8 @@ def test_pipeline(pipelines, X_test, Y_test):
         dict_line = {
             "method" : pipe.named_steps['model'].__class__.__name__,
             "accuracy" : pipe.score(X_test, Y_test),
-            "precision" : precision_score(Y_test, Y_pred),
-            "recall" : recall_score(Y_test, Y_pred),
+            "precision" : precision_score(Y_test, Y_pred, **score_params),
+            "recall" : recall_score(Y_test, Y_pred, **score_params),
             "params" : [pipe.named_steps['model']]
         }
         df_line = pd.DataFrame(dict_line, columns=COLS_EVAL_2)
@@ -244,13 +178,9 @@ def test_trimming(X_train, Y_train, X_test, Y_test, sk_fun_dict, index_by_import
     return scores
 
 
-## PLOTS STUFFS
-from matplotlib.markers import MarkerStyle
-from matplotlib.lines import Line2D
-from matplotlib import colormaps
-from matplotlib.patches import Patch
-import matplotlib.pyplot as plt
-
+##
+## PLOT STUFF
+##
 
 def __column_typer(col) :
     modals = col.value_counts().index
@@ -360,14 +290,17 @@ def comparative_preprocessing(df, scores=["precision", "accuracy", "recall"], DP
         "MinMaxScale" : 1,
         "StdScale" : 2, 
         "StdScale + PCA" : 3,
-        "Trim + StdScale": 4
+        "Trim + StdScale": 4,
+        "Trim + StdScale + PCA": 5
     }
+    LABELS = ["None", "MinMax", "Std", "Std + PCA", "Trim + Std", "Trim + Std + PCA"]
+
     fig, ax = plt.subplots(ncols=len(scores), figsize=(12, 4), dpi=DPI)
     for i, sc in enumerate(scores):
         
         ax[i].set_xticks(
-            list(range(5)),
-            labels=["None", "MinMax", "Std", "Std + PCA", "Trim + Std"],
+            list(range(len(LABELS))),
+            labels=LABELS,
             rotation=45
         )
         ax[i].set_title(f"'{sc}' by different preprocessing", size=12)
@@ -422,7 +355,7 @@ def results_run_clfs(
             c = COLOR_CLFS[serie["method"].split("_")[0]]
             ax[i].barh(serie["method"], serie[mean], xerr=serie[sd], color=c)
 
-    fig.suptitle(f"Top {top} methods for {run_name}", fontsize=16)
+    fig.suptitle(f"Top '{top}' methods for {run_name}", fontsize=16)
     fig.tight_layout()
     fig.legend(
         [Patch(facecolor=COLOR_CLFS[key]) for key in COLOR_CLFS],[key for key in COLOR_CLFS],
@@ -446,6 +379,3 @@ def results_test_trimming(res):
             )
     fig.suptitle("Evolution de 'accuracy' en fonction des variables")
     fig.tight_layout()
-
-
-    
