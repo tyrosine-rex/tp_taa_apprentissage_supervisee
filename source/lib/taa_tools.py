@@ -3,7 +3,7 @@ from pickle import dump, load
 from sys import stderr
 from os.path import exists
 from os import makedirs
-from IPython.display import display
+from IPython.display import display, Markdown
 
 from sklearn.metrics import accuracy_score, confusion_matrix, precision_score, recall_score
 from sklearn.model_selection import cross_validate, KFold
@@ -101,9 +101,21 @@ CLASSIFIERS = {
 }
 
 
-def test_model(X_train, Y_train, X_test, Y_test, sk_fun, comment="", **kwargs):
+def calc_prior_accuracy(Y_df):
+    probs = np.array([v/Y_df.shape[0] for _, v in Y_df.value_counts().items()])
+    acc = (probs**2).sum()
+    txt = "Un algoritme qui renvoie la modalité $m$ avec une probabilité p(m):" + \
+    f" $$p(m)= \\frac{{nb_{{m}}}}{{nb_{{total}}}} $$ " + \
+    "aura une accuracy (c-a-d proba que $Y_{true}$ et $Y_{pred}$ soit d'accord) de :" + \
+    f" $$acc = \sum_{{m}}^{{modalite}} (p(m))^{2} = {acc:.3f}$$ " + \
+    "C'est l'accuracy de base"
+    display(Markdown(txt))
+    return acc
 
-    COLS_EVAL = ["method", "comment", "precision", "accuracy", "recall", "VP", "VN", "FP", "FN", "args"]
+
+def test_model(X_train, Y_train, X_test, Y_test, sk_fun, preprocess="", **kwargs):
+
+    COLS_EVAL = ["method", "preprocess", "precision", "accuracy", "recall", "VP", "VN", "FP", "FN", "args"]
 
     model = sk_fun(**kwargs)            # call a model
     model.fit(X_train, Y_train)         # training
@@ -114,11 +126,11 @@ def test_model(X_train, Y_train, X_test, Y_test, sk_fun, comment="", **kwargs):
     Conf = confusion_matrix(Y_test, Y_pred)
 
     # maj df_eval
-    line = [sk_fun.__name__, comment, pr, acc, rec, Conf[1, 1], Conf[0, 0], Conf[0, 1], Conf[1, 0], [str(kwargs)]]
+    line = [sk_fun.__name__, preprocess, pr, acc, rec, Conf[1, 1], Conf[0, 0], Conf[0, 1], Conf[1, 0], [str(kwargs)]]
     line_df = pd.DataFrame({k:v for k, v in zip(COLS_EVAL, line)}, columns=COLS_EVAL)
 
     # display confusion matrix
-    print(f"Results for {sk_fun.__name__} {comment} {str(kwargs)}")
+    print(f"Results for {sk_fun.__name__} {preprocess} {str(kwargs)}")
     print(f"{'accuracy':>16}{'precision':>16}{'recall':>16}")
     print(f"{acc:>16.3f}{pr:>16.3f}{rec:>16.3f}")
     print("Confusion matrix:")
@@ -177,7 +189,7 @@ def test_trimming(X_train, Y_train, X_test, Y_test, sk_fun_dict, index_by_import
             Sub_test = X_test[:, index_by_importance[:f+1]]
             model.fit(Sub_train, Y_train)
             Y_pred = model.predict(Sub_test)
-            scores[k][f] = np.round(accuracy_score(Y_test,Y_pred), 3)
+            scores[k][f] = np.round(accuracy_score(Y_test, Y_pred), 3)
     return scores
 
 
@@ -288,31 +300,22 @@ def explore_data(df, name, DPI=226):
 
 
 def comparative_preprocessing(df, scores=["precision", "accuracy", "recall"], DPI=226):
-    PREPRO = {
-        "" : 0,
-        "MinMaxScale" : 1,
-        "StdScale" : 2,
-        "StdScale + PCA" : 3,
-        "Trim + StdScale": 4,
-        "Trim + StdScale + PCA": 5
-    }
-    LABELS = ["None", "MinMax", "Std", "Std + PCA", "Trim + Std", "Trim + Std + PCA"]
 
+    df = df.sort_values(by="preprocess")
     fig, ax = plt.subplots(ncols=len(scores), figsize=(12, 4), dpi=DPI)
     for i, sc in enumerate(scores):
 
-        ax[i].set_xticks(
-            list(range(len(LABELS))),
-            labels=LABELS,
-            rotation=45
-        )
+        ax[i].set_xticklabels(df["preprocess"].unique(), rotation=70)
         ax[i].set_title(f"'{sc}' by different preprocessing", size=12)
 
-        for met in set(df["method"]):
+        for met in df["method"].unique():
             dat = df[df["method"] == met]
-            dat["x"] = list(map(lambda x:PREPRO[x], dat["comment"]))
-            dat = dat.sort_values(by="x")
-            ax[i].plot(dat["x"], dat[sc], label=met)
+            ax[i].plot(dat["preprocess"], dat[sc], label=met)
+
+        # mean of all method
+        all = df.pivot_table(values=scores, index=["preprocess"], aggfunc=np.mean)
+        ax[i].plot(all.index, all[sc], color="black", linestyle="--", linewidth=1, label="Mean")
+
 
     hd, lb = ax[0].get_legend_handles_labels()
     fig.legend(
@@ -374,7 +377,7 @@ def results_test_trimming(res):
         ax[i].axvline(np.argmax(res[k]), color="red")
         ax[i].set_title(f"'{k}'")
         ax[i].set_ylabel("Accuracy")
-        ax[i].set_xlabel("Nombre de variables incluses")
+        ax[i].set_xlabel("Indice du seuil de variables incluses")
         ax[i].set_xticks(
                 list(range(len(res[k]))),
                 labels=[str(i) for i in range(len(res[k]))]
