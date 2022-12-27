@@ -33,4 +33,5 @@ OR do this
 jupyter nbconvert --ExecutePreprocessor.kernel_name=taa_tp_env --to html --execute source/tp_final.ipynb --output-dir res
 ```
 
-A html version of the results is create inside ./res directory
+Some calculations are needed (~ 1min), but the biggest of them are stored in 'res/__cache_pickle__'
+A html version of the results is create inside ./res directory. 
